@@ -1,0 +1,13 @@
+syntax = "proto3";
+package pbgen;
+
+
+enum VersionType{
+  VersionGateServer = 0;
+  VersionDBServer = 1;
+  VersionGameServer = 2;
+}
+
+message VersionCheck {
+  int32 Type = 1;
+}

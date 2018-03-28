@@ -1,0 +1,12 @@
+syntax = "proto3";
+package pbgen;
+
+message Login {
+  string account_name = 1;
+  string account_pwd = 2;
+  int32 flag = 3;
+}
+
+message TestData{
+  int64 test_count = 1;
+}

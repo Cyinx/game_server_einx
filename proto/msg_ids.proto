@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pbgen;
+
+enum MainMsgID
+{
+  GENERAL_MSG  = 0;
+  CLIENT_LOGIN = 1;
+  GATE_DB = 2;
+}
+
+enum HandlerMsgID
+{
+    MSG_ID_BEGIN 					= 0;
+    VERSION_CHECK 					= 1;
+    LOGIN_REQUEST 					= 2;
+    LUARPC_REQUEST					= 3;		
+}
