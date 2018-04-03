@@ -1,22 +1,49 @@
 package msghandler
 
 import (
-	//"game_server/db/dbmanager"
-	"game_server/db/module"
-	//"github.com/Cyinx/einx/db/mongodb"
-	//"github.com/Cyinx/einx/slog"
-	//"msg_def"
+	"game_server/db/dbmanager"
+	"github.com/Cyinx/einx/lua"
+	"github.com/yuin/gopher-lua"
 )
 
-func InitLoginHandler() {
-	RegisterRpcHandler("test", TestRpc)
+func InitDBHandler() {
+	RegisterRpcHandler("Insert", Insert)
+	RegisterRpcHandler("QueryOne", QueryOne)
 }
 
-func TestRpc(a interface{}, args []interface{}) {
-	//db_manager.GetInstance().Insert("test", mongodb.M{"username": "test", "pass": "111"})
-	//slog.LogInfo("testrpc", "%v", args[0].([]byte))
-	t, _ := module.Lua.UnMarshal(args[0].([]byte))
-	module.Lua.PCall2("test", t)
+func QueryOne(sender interface{}, args []interface{}) {
+	collection := args[0].(string)
+	content := args[1].(*lua.LTable)
+	cb := args[2].(string)
+	cb_args := args[3]
+
+	q := lua_state.ConvertLuaTable(content)
+
+	is_success := false
+	result := make(map[string]interface{})
+
+	if db_manager.GetInstance().DBQueryOneResult(collection, q, result) == nil {
+		is_success = true
+	}
+
+	logic_module.RpcCall("mongodb_query_back", cb, cb_args, is_success, result)
+}
+
+func Insert(sender interface{}, args []interface{}) {
+	collection := args[0].(string)
+	cond := args[1].(*lua.LTable)
+	cb := args[2].(string)
+	cb_args := args[3]
+
+	q := lua_state.ConvertLuaTable(cond)
+
+	is_success := false
+
+	if db_manager.GetInstance().Insert(collection, q) == nil {
+		is_success = true
+	}
+
+	logic_module.RpcCall("mongodb_insert_back", cb, cb_args, is_success)
 }
 
 func CheckVersion(agent Agent, args interface{}) {

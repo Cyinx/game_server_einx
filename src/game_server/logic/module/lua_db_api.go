@@ -1,34 +1,66 @@
 package module
 
 import (
+	"github.com/Cyinx/einx/slog"
 	"github.com/yuin/gopher-lua"
 )
 
-type DBService struct {
+var cb_handlers map[string]*lua.LFunction = make(map[string]*lua.LFunction)
+
+func GetDBServiceCallBack(f string) *lua.LFunction {
+	if cb_handler, ok := cb_handlers[f]; ok == true {
+		return cb_handler
+	}
+	return nil
 }
 
 const lua_table_name = "DBService"
 
-var func_map = map[string]lua.LGFunction{
-	"RpcCall": DBRpcCall,
-}
-
-func registerPersonType(L *lua.LState) {
+func registerDBService(L *lua.LState) {
 	mt := L.NewTypeMetatable(lua_table_name)
 	L.SetGlobal(lua_table_name, mt)
 	// methods
-	L.SetField(mt, "RpcCall", L.NewFunction(DBRpcCall))
-	//L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), func_map))
+	L.SetField(mt, "__newindex", L.NewFunction(newIndexMethod))
+	L.SetField(mt, "Insert", L.NewFunction(Insert))
+	L.SetField(mt, "QueryOne", L.NewFunction(QueryOne))
 }
 
-func DBRpcCall(L *lua.LState) int {
-	if L.GetTop() < 1 {
+func newIndexMethod(L *lua.LState) int {
+	if L.GetTop() < 2 {
 		return 0
 	}
-	rpc_name := L.CheckString(1)
-	t := L.CheckTable(2)
-	b := make([]byte, 0, 128)
-	b = Lua.Marshal(b, t)
-	db_module.RpcCall(rpc_name, b)
+	f := L.CheckString(1)
+	h := L.CheckFunction(2)
+
+	cb_handlers[f] = h
+	return 1
+}
+
+func Insert(L *lua.LState) int {
+	slog.LogDebug("db", "insert %v", L.GetTop())
+	if L.GetTop() < 4 {
+		return 0
+	}
+
+	collection := L.CheckString(1)
+	content := L.CheckTable(2)
+	cb := L.CheckString(3)
+	args := L.CheckTable(4)
+
+	mongodb.RpcCall("Insert", collection, content, cb, args)
+	return 1
+}
+
+func QueryOne(L *lua.LState) int {
+	if L.GetTop() < 4 {
+		return 0
+	}
+
+	collection := L.CheckString(1)
+	content := L.CheckTable(2)
+	cb := L.CheckString(3)
+	args := L.CheckTable(4)
+
+	mongodb.RpcCall("QueryOne", collection, content, cb, args)
 	return 1
 }

@@ -7,8 +7,6 @@ import (
 
 func InitDBModule() {
 	module.InitLuaApi()
-	module.Lua.DoFile("script_game/db/init.lua")
-	module.LoadLuaConfig()
 	module.InitDBComponent()
-	msghandler.InitLoginHandler()
+	msghandler.InitDBHandler()
 }

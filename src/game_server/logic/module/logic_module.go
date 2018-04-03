@@ -5,7 +5,7 @@ import (
 )
 
 var Instance = einx.GetModule("logic")
-var db_module = einx.GetModule("mongodb")
+var mongodb = einx.GetModule("mongodb")
 var Lua = einx.NewLuaStae()
 
 func AddTcpServer(addr string, mgr interface{}) {
@@ -18,5 +18,5 @@ func StartTcpClient(addr string, mgr interface{}) {
 
 func InitLuaApi() {
 	Lua.RegisterFunction("RpcCall", RpcCall)
-	registerPersonType(Lua.GetVm())
+	registerDBService(Lua.GetVm())
 }

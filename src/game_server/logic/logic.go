@@ -9,8 +9,9 @@ import (
 
 func InitLogicModule() {
 	module.InitLuaApi()
-	module.Lua.DoFile("script_game/logic/init.lua")
+	module.Lua.DoFile("script_game/init.lua")
 	msghandler.InitLoginHandler()
+	msghandler.InitDBHandler()
 }
 
 func StartTcpServer(port string) {

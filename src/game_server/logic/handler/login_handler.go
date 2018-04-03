@@ -23,8 +23,8 @@ func CheckVersion(agent Agent, args interface{}) {
 }
 
 func MsgLuaRpc(agent Agent, args interface{}) {
-	msg := args.(msg_def.LuaRpcMsg)
+	msg := args.(*msg_def.LuaRpcMsg)
 	lua_runtime := module.Lua
 	lua_arg, _ := lua_runtime.UnMarshal(msg.Payload)
-	lua_runtime.PCall("on_handler_lua_rpc", msg.Rpcname, lua_arg)
+	lua_runtime.PCall("on_message_handler", msg.Rpcname, uint64(agent.GetID()), lua_arg)
 }

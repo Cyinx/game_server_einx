@@ -1,0 +1,5 @@
+[EROR] 20:41:32 lua dofile error:open script_base/include.lua: The system cannot find the path specified.
+stack traceback:
+	[G]: in function 'dofile'
+	script_game/init.lua:1: in main chunk
+	[G]: ?
