@@ -5,8 +5,12 @@ import (
 	"game_server/logic/handler"
 	"game_server/logic/module"
 	"game_server/logic/outserver_mgr"
+	"github.com/Cyinx/einx/lua"
 )
 
+func GetLuaRuntime() *lua_state.LuaRuntime {
+	return module.Lua
+}
 func InitLogicModule() {
 	module.InitLuaApi()
 	module.Lua.DoFile("script_game/init.lua")

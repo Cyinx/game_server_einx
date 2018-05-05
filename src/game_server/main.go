@@ -5,10 +5,13 @@ import (
 	"game_server/logic"
 	"github.com/Cyinx/einx"
 	"github.com/Cyinx/einx/slog"
+	"msg_def"
 	"runtime"
 )
 
 func main() {
+	msg_def.Serializer.SetLuaRuntime(logic.GetLuaRuntime())
+	einx.SetNetworkSerializer(msg_def.Serializer)
 	slog.SetLogPath("log/game_server/")
 	slog.LogInfo("game_server", "开始服务器...")
 	slog.LogInfo("game_server", "服务器CPU核心数: [%d]", runtime.NumCPU())

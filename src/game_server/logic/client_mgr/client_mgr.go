@@ -21,8 +21,8 @@ var Instance = &ClientMgr{
 	client_map: make(map[AgentID]*Client),
 }
 
-func (this *ClientMgr) GetClient(agent_id AgentID) (*Client, bool) {
-	client, ok := this.client_map[agent_id]
+func (this *ClientMgr) GetClient(agent_id uint64) (*Client, bool) {
+	client, ok := this.client_map[AgentID(agent_id)]
 	return client, ok
 }
 

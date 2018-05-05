@@ -10,7 +10,7 @@ import (
 
 func InitLoginHandler() {
 	RegisterHandler(msg_def.VersionCheckMsgID, CheckVersion)
-	RegisterHandler(msg_def.MsgLuaRpcMsgID, MsgLuaRpc)
+	RegisterHandler(msg_def.LuaMsgID, MsgLuaRpc)
 	RegisterRpcHandler("test", TestRpc)
 }
 
@@ -24,8 +24,8 @@ func CheckVersion(agent Agent, args interface{}) {
 }
 
 func MsgLuaRpc(agent Agent, args interface{}) {
-	msg := args.(*msg_def.LuaRpcMsg)
+	msg := args.(*lua_state.LTable)
 	lua_runtime := module.Lua
-	lua_arg, _ := lua_state.UnMarshal(msg.Payload, lua_runtime.GetVm())
-	lua_runtime.PCall("on_message_handler", msg.Rpcname, uint64(agent.GetID()), lua_arg)
+	lua_runtime.PCall("on_message_handler",
+		msg.RawGetInt(1), uint64(agent.GetID()), msg.RawGetInt(2))
 }
