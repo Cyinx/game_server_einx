@@ -8,27 +8,31 @@ import (
 )
 
 type Agent = einx.Agent
+type NetLinker = einx.NetLinker
 type AgentID = einx.AgentID
 type EventType = einx.EventType
 type Component = einx.Component
 type ComponentID = einx.ComponentID
 type ITcpClientMgr = einx.ITcpClientMgr
+type ProtoTypeID = uint32
+
+var logic = einx.GetModule("logic")
 
 const (
 	ServerType_DBServer = 1
 )
 
 type OutServerMgr struct {
-	link_map         map[AgentID]Agent
+	link_map         map[AgentID]NetLinker
 	client_component ITcpClientMgr
 }
 
 var Instance = &OutServerMgr{
-	link_map: make(map[AgentID]Agent),
+	link_map: make(map[AgentID]NetLinker),
 }
 
-func (this *OutServerMgr) OnAgentEnter(id AgentID, agent Agent) {
-	this.link_map[id] = agent
+func (this *OutServerMgr) OnLinkerConneted(id AgentID, agent Agent) {
+	this.link_map[id] = agent.(NetLinker)
 	slog.LogInfo("outserver", "outserver connect : %v", id)
 	switch agent.GetUserType() {
 	case ServerType_DBServer:
@@ -36,7 +40,7 @@ func (this *OutServerMgr) OnAgentEnter(id AgentID, agent Agent) {
 	}
 }
 
-func (this *OutServerMgr) OnAgentExit(id AgentID, agent Agent) {
+func (this *OutServerMgr) OnLinkerClosed(id AgentID, agent Agent) {
 	delete(this.link_map, id)
 }
 
@@ -51,7 +55,23 @@ func (this *OutServerMgr) OnComponentCreate(id ComponentID, component Component)
 }
 
 func (this *OutServerMgr) OnDBServerConnected(id AgentID, agent Agent) {
-	var b msg_def.VersionCheck
-	b.Type = int32(pbgen.VersionType_VersionGateServer)
-	agent.WriteMsg(msg_def.VersionCheckMsgID, &b)
+	var msg msg_def.VersionCheck
+	msg.Type = int32(pbgen.VersionType_VersionGateServer)
+	linker := agent.(NetLinker)
+	b, _, _ := msg_def.MarshalMsg(msg)
+	linker.WriteMsg(msg_def.VersionCheckMsgID, b)
+}
+
+func (this *OutServerMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
+	msg := msg_def.UnmarshalMsg(id, b)
+	if msg != nil {
+		logic.RouterMsg(agent, id, msg)
+	}
+}
+
+func (this *OutServerMgr) ServeRpc(agent Agent, id ProtoTypeID, b []byte) {
+	msg := msg_def.UnmarshalRpc(id, b)
+	if msg != nil {
+		logic.RouterMsg(agent, id, msg)
+	}
 }

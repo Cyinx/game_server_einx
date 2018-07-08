@@ -25,3 +25,7 @@ func StartTcpServer(port string) {
 func StartClusterClient() {
 	module.StartTcpClient("outserver", outserver_mgr.Instance)
 }
+
+func StartAuthClient() {
+
+}

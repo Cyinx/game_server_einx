@@ -2,22 +2,24 @@ package msg_def
 
 import (
 	"github.com/Cyinx/einx/lua"
+	"github.com/Cyinx/einx/network"
 	"github.com/Cyinx/einx/slog"
 	"github.com/Cyinx/protobuf/proto"
 	"github.com/yuin/gopher-lua"
 	"reflect"
+	//	"sync"
 )
 
 type ProtoTypeID = uint32
 type Message = proto.Message
 
-type msgSerializer struct {
-	lua *lua_state.LuaRuntime
-}
-
-var Serializer *msgSerializer = &msgSerializer{}
+var lua_vm *lua_state.LuaRuntime = nil
 
 var MsgNewMap = make(map[ProtoTypeID]func() interface{})
+
+func SetLuaVm(vm *lua_state.LuaRuntime) {
+	lua_vm = vm
+}
 
 func RegisterMsgProto(msg_type uint16, msg_id uint16, x Message) ProtoTypeID {
 	proto_id := (uint32(msg_type) << 16) | uint32(msg_id)
@@ -35,13 +37,9 @@ func RegisterMsgProto(msg_type uint16, msg_id uint16, x Message) ProtoTypeID {
 	return proto_id
 }
 
-func (this *msgSerializer) SetLuaRuntime(l *lua_state.LuaRuntime) {
-	this.lua = l
-}
-
-func (this *msgSerializer) UnmarshalMsg(type_id ProtoTypeID, data []byte) interface{} {
+func UnmarshalMsg(type_id ProtoTypeID, data []byte) interface{} {
 	if type_id == LuaMsgID {
-		lua_msg, _ := lua_state.UnMarshal(data, this.lua.GetVm())
+		lua_msg, _ := lua_state.UnMarshal(data, lua_vm.GetVm())
 		return lua_msg
 	}
 
@@ -55,20 +53,25 @@ func (this *msgSerializer) UnmarshalMsg(type_id ProtoTypeID, data []byte) interf
 	return msg
 }
 
-func (this *msgSerializer) MarshalMsg(msg interface{}) ([]byte, error) {
+func MarshalMsg(msg interface{}) ([]byte, error, bool) {
 	switch v := msg.(type) {
 	case Message:
-		return proto.Marshal(v)
+		b, err := proto.Marshal(v)
+		return b, err, false
 	default:
-		b := lua_state.Marshal(make([]byte, 0, 16), msg.(lua.LValue))
-		return b, nil
+		b := make([]byte, 0, 128)
+		b = lua_state.Marshal(b, msg.(lua.LValue))
+		return b, nil, true
 	}
 }
 
-func (this *msgSerializer) UnmarshalRpc(type_id ProtoTypeID, data []byte) interface{} {
-	return nil
+func UnmarshalRpc(type_id ProtoTypeID, data []byte) interface{} {
+	p, _ := network.RpcUnMarshal(data)
+	return p
 }
 
-func (this *msgSerializer) MarshalRpc(msg interface{}) ([]byte, error) {
-	return nil, nil
+func MarshalRpc(msg interface{}) ([]byte, error, bool) {
+	b := make([]byte, 0, 128)
+	b = network.RpcMarshal(b, msg)
+	return b, nil, true
 }

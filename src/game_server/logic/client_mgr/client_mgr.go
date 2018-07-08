@@ -8,9 +8,13 @@ import (
 
 type Agent = einx.Agent
 type AgentID = einx.AgentID
+type NetLinker = einx.NetLinker
 type EventType = einx.EventType
 type Component = einx.Component
 type ComponentID = einx.ComponentID
+type ProtoTypeID = uint32
+
+var logic = einx.GetModule("logic")
 
 type ClientMgr struct {
 	client_map map[AgentID]*Client
@@ -27,12 +31,14 @@ func (this *ClientMgr) GetClient(agent_id uint64) (*Client, bool) {
 }
 
 func (this *ClientMgr) OnAgentEnter(id AgentID, agent Agent) {
-	this.client_map[id] = &Client{agent: agent}
+	net_linker := agent.(NetLinker)
+	this.client_map[id] = &Client{linker: net_linker}
 	if id%1000 == 0 {
 		slog.LogWarning("client", "client id [%v]", id)
 	}
-	var b msg_def.VersionCheck
-	agent.WriteMsg(msg_def.VersionCheckMsgID, &b)
+	var msg msg_def.VersionCheck
+	b, _, _ := msg_def.MarshalMsg(msg)
+	net_linker.WriteMsg(msg_def.VersionCheckMsgID, b)
 }
 
 func (this *ClientMgr) OnAgentExit(id AgentID, agent Agent) {
@@ -47,4 +53,19 @@ func (this *ClientMgr) OnComponentCreate(id ComponentID, component Component) {
 	this.tcp_link = component
 	component.Start()
 	slog.LogInfo("gate_client", "Tcp sever start success")
+}
+
+func (this *ClientMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
+	msg := msg_def.UnmarshalMsg(id, b)
+	if msg != nil {
+		logic.RouterMsg(agent, id, msg)
+	}
+
+}
+
+func (this *ClientMgr) ServeRpc(agent Agent, id ProtoTypeID, b []byte) {
+	msg := msg_def.UnmarshalRpc(id, b)
+	if msg != nil {
+		logic.RouterMsg(agent, id, msg)
+	}
 }

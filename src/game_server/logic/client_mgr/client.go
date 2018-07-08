@@ -5,9 +5,10 @@ import (
 )
 
 type Client struct {
-	agent Agent
+	linker NetLinker
 }
 
 func (this *Client) RpcCall(msg interface{}) {
-	this.agent.WriteMsg(msg_def.LuaMsgID, msg)
+	b, _, _ := msg_def.MarshalMsg(msg)
+	this.linker.WriteMsg(msg_def.LuaMsgID, b)
 }
