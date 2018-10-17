@@ -12,7 +12,7 @@ func InitDBHandler() {
 	RegisterRpcHandler("mongodb_insert_back", OnMongodbInsertBack)
 }
 
-func OnMongodbQueryBack(sender interface{}, args []interface{}) {
+func OnMongodbQueryBack(ctx Context, args []interface{}) {
 	cb := args[0].(string)
 	cb_args := args[1]
 	is_success := args[2].(bool)
@@ -31,7 +31,7 @@ func OnMongodbQueryBack(sender interface{}, args []interface{}) {
 	}
 }
 
-func OnMongodbInsertBack(sender interface{}, args []interface{}) {
+func OnMongodbInsertBack(ctx Context, args []interface{}) {
 	cb := args[0].(string)
 	cb_args := args[1]
 	is_success := args[2].(bool)

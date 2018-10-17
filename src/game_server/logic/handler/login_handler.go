@@ -14,16 +14,17 @@ func InitLoginHandler() {
 	RegisterRpcHandler("test", TestRpc)
 }
 
-func TestRpc(a interface{}, args []interface{}) {
+func TestRpc(ctx Context, args []interface{}) {
 
 	slog.LogInfo("testrpc", "%s", args[0])
 }
 
-func CheckVersion(agent Agent, args interface{}) {
+func CheckVersion(ctx Context, args interface{}) {
 
 }
 
-func MsgLuaRpc(agent Agent, args interface{}) {
+func MsgLuaRpc(ctx Context, args interface{}) {
+	agent := ctx.GetSender()
 	msg := args.(*lua_state.LTable)
 	lua_runtime := module.Lua
 	lua_runtime.PCall("on_message_handler",

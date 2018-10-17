@@ -11,7 +11,7 @@ func InitDBHandler() {
 	RegisterRpcHandler("QueryOne", QueryOne)
 }
 
-func QueryOne(sender interface{}, args []interface{}) {
+func QueryOne(ctx Context, args []interface{}) {
 	collection := args[0].(string)
 	content := args[1].(*lua.LTable)
 	cb := args[2].(string)
@@ -29,7 +29,7 @@ func QueryOne(sender interface{}, args []interface{}) {
 	logic_module.RpcCall("mongodb_query_back", cb, cb_args, is_success, result)
 }
 
-func Insert(sender interface{}, args []interface{}) {
+func Insert(ctx Context, args []interface{}) {
 	collection := args[0].(string)
 	cond := args[1].(*lua.LTable)
 	cb := args[2].(string)
@@ -46,6 +46,6 @@ func Insert(sender interface{}, args []interface{}) {
 	logic_module.RpcCall("mongodb_insert_back", cb, cb_args, is_success)
 }
 
-func CheckVersion(agent Agent, args interface{}) {
+func CheckVersion(ctx Context, args interface{}) {
 
 }

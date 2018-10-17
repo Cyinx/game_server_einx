@@ -12,9 +12,11 @@ type NetLinker = einx.NetLinker
 type EventType = einx.EventType
 type Component = einx.Component
 type ComponentID = einx.ComponentID
+type ModuleRouter = einx.ModuleRouter
 type ProtoTypeID = uint32
 
 var logic = einx.GetModule("logic")
+var logic_router = logic.(ModuleRouter)
 
 type ClientMgr struct {
 	client_map map[AgentID]*Client
@@ -58,7 +60,7 @@ func (this *ClientMgr) OnComponentCreate(id ComponentID, component Component) {
 func (this *ClientMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
 	msg := msg_def.UnmarshalMsg(id, b)
 	if msg != nil {
-		logic.RouterMsg(agent, id, msg)
+		logic_router.RouterMsg(agent, id, msg)
 	}
 
 }
@@ -66,6 +68,6 @@ func (this *ClientMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
 func (this *ClientMgr) ServeRpc(agent Agent, id ProtoTypeID, b []byte) {
 	msg := msg_def.UnmarshalRpc(id, b)
 	if msg != nil {
-		logic.RouterMsg(agent, id, msg)
+		logic_router.RouterMsg(agent, id, msg)
 	}
 }

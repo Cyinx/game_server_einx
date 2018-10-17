@@ -17,6 +17,7 @@ type ITcpClientMgr = einx.ITcpClientMgr
 type ProtoTypeID = uint32
 
 var logic = einx.GetModule("logic")
+var logic_router = logic.(einx.ModuleRouter)
 
 const (
 	ServerType_DBServer = 1
@@ -34,7 +35,8 @@ var Instance = &OutServerMgr{
 func (this *OutServerMgr) OnLinkerConneted(id AgentID, agent Agent) {
 	this.link_map[id] = agent.(NetLinker)
 	slog.LogInfo("outserver", "outserver connect : %v", id)
-	switch agent.GetUserType() {
+	linker := agent.(NetLinker)
+	switch linker.GetUserType() {
 	case ServerType_DBServer:
 		this.OnDBServerConnected(id, agent)
 	}
@@ -65,13 +67,13 @@ func (this *OutServerMgr) OnDBServerConnected(id AgentID, agent Agent) {
 func (this *OutServerMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
 	msg := msg_def.UnmarshalMsg(id, b)
 	if msg != nil {
-		logic.RouterMsg(agent, id, msg)
+		logic_router.RouterMsg(agent, id, msg)
 	}
 }
 
 func (this *OutServerMgr) ServeRpc(agent Agent, id ProtoTypeID, b []byte) {
 	msg := msg_def.UnmarshalRpc(id, b)
 	if msg != nil {
-		logic.RouterMsg(agent, id, msg)
+		logic_router.RouterMsg(agent, id, msg)
 	}
 }

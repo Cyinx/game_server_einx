@@ -1,7 +1,6 @@
 package msghandler
 
 import (
-	"game_server/logic/module"
 	"github.com/Cyinx/einx"
 )
 
@@ -10,11 +9,15 @@ type AgentID = einx.AgentID
 type ProtoTypeID = einx.ProtoTypeID
 type MsgHandler = einx.MsgHandler
 type RpcHandler = einx.RpcHandler
+type Context = einx.Context
+
+var logic_module = einx.GetModule("logic")
+var module_router = logic_module.(einx.ModuleRouter)
 
 func RegisterHandler(type_id ProtoTypeID, handler MsgHandler) {
-	module.Instance.RegisterHandler(type_id, handler)
+	module_router.RegisterHandler(type_id, handler)
 }
 
 func RegisterRpcHandler(rpc_name string, handler RpcHandler) {
-	module.Instance.RegisterRpcHandler(rpc_name, handler)
+	module_router.RegisterRpcHandler(rpc_name, handler)
 }
