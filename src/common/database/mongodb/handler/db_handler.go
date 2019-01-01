@@ -2,6 +2,7 @@ package msghandler
 
 import (
 	"game_server/db/dbmanager"
+	"game_server/db/module"
 	"github.com/Cyinx/einx/lua"
 	"github.com/yuin/gopher-lua"
 )
@@ -9,6 +10,14 @@ import (
 func InitDBHandler() {
 	RegisterRpcHandler("Insert", Insert)
 	RegisterRpcHandler("QueryOne", QueryOne)
+	RegisterRpcHandler("db_lua_rpc", OnDBLuaRpc)
+}
+
+func OnDBLuaRpc(ctx Context, args []interface{}) {
+	rpc_name := args[0].(lua.LValue)
+	lua_args := args[1].(*lua.LTable)
+	lua_runtime := module.Lua
+	lua_runtime.PCall("on_rpc_handler", rpc_name, 0, lua_args)
 }
 
 func QueryOne(ctx Context, args []interface{}) {
@@ -22,7 +31,7 @@ func QueryOne(ctx Context, args []interface{}) {
 	is_success := false
 	result := make(map[string]interface{})
 
-	if db_manager.GetInstance().DBQueryOneResult(collection, q, result) == nil {
+	if dbmanager.GetInstance().DBQueryOneResult(collection, q, result) == nil {
 		is_success = true
 	}
 
@@ -39,7 +48,7 @@ func Insert(ctx Context, args []interface{}) {
 
 	is_success := false
 
-	if db_manager.GetInstance().Insert(collection, q) == nil {
+	if dbmanager.GetInstance().Insert(collection, q) == nil {
 		is_success = true
 	}
 

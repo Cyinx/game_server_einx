@@ -5,16 +5,8 @@ import (
 )
 
 var Instance = einx.GetModule("logic")
-var mongodb = einx.GetModule("mongodb")
+var mongodb = einx.GetModule("mysql")
 var Lua = einx.NewLuaStae()
-
-func AddTcpServer(addr string, mgr interface{}) {
-	einx.AddTcpServerMgr(Instance, addr, mgr)
-}
-
-func StartTcpClient(addr string, mgr interface{}) {
-	einx.StartTcpClientMgr(Instance, addr, mgr)
-}
 
 func InitLuaApi() {
 	Lua.RegisterFunction("RpcCall", RpcCall)

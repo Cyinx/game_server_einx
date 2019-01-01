@@ -1,7 +1,7 @@
 package module
 
 import (
-	"game_server/logic/client_mgr"
+	"game_server/client_mgr"
 	"github.com/Cyinx/einx/slog"
 	"github.com/yuin/gopher-lua"
 )
@@ -17,7 +17,7 @@ func RpcCall(L *lua.LState) int {
 	f := L.CheckAny(2)
 	t := L.CheckAny(3)
 
-	s, _ := clientmgr.Instance.GetClient(uint64(sid))
+	s := clientmgr.GetClient(uint64(sid))
 	if s != nil {
 		if buffer_table == nil {
 			buffer_table = L.NewTable()

@@ -7,6 +7,7 @@ import (
 
 func InitDBModule() {
 	module.InitLuaApi()
+	module.Lua.DoFile("script_db/init.lua")
 	module.InitDBComponent()
 	msghandler.InitDBHandler()
 }

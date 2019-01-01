@@ -11,8 +11,9 @@ type AgentID = einx.AgentID
 type NetLinker = einx.NetLinker
 type EventType = einx.EventType
 type Component = einx.Component
-type ComponentID = einx.ComponentID
 type ModuleRouter = einx.ModuleRouter
+type ComponentID = einx.ComponentID
+type Context = einx.Context
 type ProtoTypeID = uint32
 
 var logic = einx.GetModule("logic")
@@ -27,31 +28,25 @@ var Instance = &ClientMgr{
 	client_map: make(map[AgentID]*Client),
 }
 
-func (this *ClientMgr) GetClient(agent_id uint64) (*Client, bool) {
-	client, ok := this.client_map[AgentID(agent_id)]
-	return client, ok
+func GetClient(agent_id uint64) *Client {
+	client, _ := Instance.client_map[AgentID(agent_id)]
+	return client
 }
 
-func (this *ClientMgr) OnAgentEnter(id AgentID, agent Agent) {
-	net_linker := agent.(NetLinker)
-	this.client_map[id] = &Client{linker: net_linker}
-	if id%1000 == 0 {
-		slog.LogWarning("client", "client id [%v]", id)
-	}
-	var msg msg_def.VersionCheck
-	b, _, _ := msg_def.MarshalMsg(msg)
-	net_linker.WriteMsg(msg_def.VersionCheckMsgID, b)
+func (this *ClientMgr) OnLinkerConneted(id AgentID, agent Agent) {
+	this.client_map[id] = &Client{linker: agent.(NetLinker)}
 }
 
-func (this *ClientMgr) OnAgentExit(id AgentID, agent Agent) {
+func (this *ClientMgr) OnLinkerClosed(id AgentID, agent Agent) {
 	delete(this.client_map, id)
 }
 
-func (this *ClientMgr) OnComponentError(c Component, err error) {
+func (this *ClientMgr) OnComponentError(ctx Context, err error) {
 
 }
 
-func (this *ClientMgr) OnComponentCreate(id ComponentID, component Component) {
+func (this *ClientMgr) OnComponentCreate(ctx Context, id ComponentID) {
+	component := ctx.GetComponent()
 	this.tcp_link = component
 	component.Start()
 	slog.LogInfo("gate_client", "Tcp sever start success")

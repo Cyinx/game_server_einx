@@ -1,4 +1,4 @@
-package db_manager
+package dbmanager
 
 import (
 	"github.com/Cyinx/einx"
@@ -11,6 +11,7 @@ type AgentID = einx.AgentID
 type EventType = einx.EventType
 type Component = einx.Component
 type ComponentID = einx.ComponentID
+type Context = einx.Context
 
 type DBManager struct {
 	db *mongodb.MongoDBMgr
@@ -22,15 +23,17 @@ func GetInstance() *mongodb.MongoDBMgr {
 	return Instance.db
 }
 
-func (this *DBManager) OnComponentError(c Component, err error) {
+func (this *DBManager) OnComponentError(ctx Context, err error) {
 	slog.LogInfo("mongodb", "reconnect to mongodb,error:%v.", err)
+	c := ctx.GetComponent()
 	c.Start()
 	if err := this.db.Ping(); err != nil {
 		slog.LogInfo("mongodb", "mongodb error:%v", err)
 	}
 }
 
-func (this *DBManager) OnComponentCreate(id ComponentID, component Component) {
+func (this *DBManager) OnComponentCreate(ctx Context, id ComponentID) {
+	component := ctx.GetComponent()
 	component.Start()
 	this.db = component.(*mongodb.MongoDBMgr)
 	if err := this.db.Ping(); err != nil {

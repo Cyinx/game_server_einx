@@ -23,6 +23,22 @@ func registerDBService(L *lua.LState) {
 	L.SetField(mt, "__newindex", L.NewFunction(newIndexMethod))
 	L.SetField(mt, "Insert", L.NewFunction(Insert))
 	L.SetField(mt, "QueryOne", L.NewFunction(QueryOne))
+	L.SetField(mt, "RpcCall", L.NewFunction(DbRpcCall))
+}
+
+func DbRpcCall(L *lua.LState) int {
+
+	if L.GetTop() < 2 {
+		return 0
+	}
+	rpc_name := L.CheckAny(1)
+	args := L.NewTable()
+	for i := 2; i <= L.GetTop(); i++ {
+		args.RawSetInt(i-1, L.CheckAny(i))
+	}
+
+	mongodb.RpcCall("db_lua_rpc", rpc_name, args)
+	return 1
 }
 
 func newIndexMethod(L *lua.LState) int {
@@ -33,7 +49,7 @@ func newIndexMethod(L *lua.LState) int {
 	h := L.CheckFunction(2)
 
 	cb_handlers[f] = h
-	return 1
+	return 0
 }
 
 func Insert(L *lua.LState) int {
@@ -48,7 +64,7 @@ func Insert(L *lua.LState) int {
 	args := L.CheckTable(4)
 
 	mongodb.RpcCall("Insert", collection, content, cb, args)
-	return 1
+	return 0
 }
 
 func QueryOne(L *lua.LState) int {
@@ -62,5 +78,5 @@ func QueryOne(L *lua.LState) int {
 	args := L.CheckTable(4)
 
 	mongodb.RpcCall("QueryOne", collection, content, cb, args)
-	return 1
+	return 0
 }

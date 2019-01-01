@@ -10,16 +10,19 @@ import (
 )
 
 var Instance = einx.GetModule("mongodb")
+var Logic = einx.GetModule("logic")
 var Lua = einx.NewLuaStae()
 var db_cfg = mongodb.NewMongoDBInfo("192.168.1.88", 27916, "test", "", "")
 
 func InitDBComponent() {
 	var DBInstance = mongodb.NewMongoDBMgr(Instance, db_cfg, 5*time.Second)
-	einx.AddModuleComponent(Instance, DBInstance, db_manager.Instance)
+	einx.AddModuleComponent(Instance, DBInstance, dbmanager.Instance)
 }
 
 func InitLuaApi() {
 	//Lua.RegisterFunction("InitDBCfg", InitDBCfg)
+	registerLogicService(Lua.GetVm())
+	registerDBManager(Lua.GetVm())
 }
 
 func LoadLuaConfig() {

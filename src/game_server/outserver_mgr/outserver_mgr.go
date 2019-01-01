@@ -2,43 +2,45 @@ package outserver_mgr
 
 import (
 	"github.com/Cyinx/einx"
-	"github.com/Cyinx/einx/slog"
+	//"github.com/Cyinx/einx/slog"
 	"msg_def"
-	"protobuf_gen"
 )
 
 type Agent = einx.Agent
-type NetLinker = einx.NetLinker
 type AgentID = einx.AgentID
+type NetLinker = einx.NetLinker
 type EventType = einx.EventType
 type Component = einx.Component
 type ComponentID = einx.ComponentID
 type ITcpClientMgr = einx.ITcpClientMgr
+type ModuleRouter = einx.ModuleRouter
 type ProtoTypeID = uint32
+type Context = einx.Context
 
 var logic = einx.GetModule("logic")
-var logic_router = logic.(einx.ModuleRouter)
+var logic_router = logic.(ModuleRouter)
 
 const (
-	ServerType_DBServer = 1
+	Type_AuthServer = 1
 )
 
 type OutServerMgr struct {
-	link_map         map[AgentID]NetLinker
+	link_map         map[AgentID]Agent
+	auth_server      *AuthServer
 	client_component ITcpClientMgr
 }
 
 var Instance = &OutServerMgr{
-	link_map: make(map[AgentID]NetLinker),
+	link_map: make(map[AgentID]Agent),
 }
 
 func (this *OutServerMgr) OnLinkerConneted(id AgentID, agent Agent) {
-	this.link_map[id] = agent.(NetLinker)
-	slog.LogInfo("outserver", "outserver connect : %v", id)
 	linker := agent.(NetLinker)
 	switch linker.GetUserType() {
-	case ServerType_DBServer:
-		this.OnDBServerConnected(id, agent)
+	case Type_AuthServer:
+		this.OnAuthServerConnected(id, agent)
+	default:
+		this.OnClusterServerConnected(id, agent)
 	}
 }
 
@@ -46,22 +48,28 @@ func (this *OutServerMgr) OnLinkerClosed(id AgentID, agent Agent) {
 	delete(this.link_map, id)
 }
 
-func (this *OutServerMgr) OnComponentError(c Component, err error) {
+func (this *OutServerMgr) OnComponentError(ctx Context, err error) {
 
 }
 
-func (this *OutServerMgr) OnComponentCreate(id ComponentID, component Component) {
+func (this *OutServerMgr) OnComponentCreate(ctx Context, id ComponentID) {
+	component := ctx.GetComponent()
 	component.Start()
 	this.client_component = component.(ITcpClientMgr)
-	this.client_component.Connect("127.0.0.1:2206", ServerType_DBServer)
+	this.client_component.Connect("127.0.0.1:2206", Type_AuthServer)
 }
 
-func (this *OutServerMgr) OnDBServerConnected(id AgentID, agent Agent) {
-	var msg msg_def.VersionCheck
-	msg.Type = int32(pbgen.VersionType_VersionGateServer)
-	linker := agent.(NetLinker)
-	b, _, _ := msg_def.MarshalMsg(msg)
-	linker.WriteMsg(msg_def.VersionCheckMsgID, b)
+func (this *OutServerMgr) OnAuthServerConnected(id AgentID, agent Agent) {
+	this.auth_server = &AuthServer{
+		linker: agent.(NetLinker),
+	}
+
+	msg := &msg_def.VersionCheck{}
+	msg.Type = 1
+	this.auth_server.SendMsg(msg_def.VersionCheckMsgID, msg)
+}
+
+func (this *OutServerMgr) OnClusterServerConnected(id AgentID, agent Agent) {
 }
 
 func (this *OutServerMgr) ServeHandler(agent Agent, id ProtoTypeID, b []byte) {
